@@ -24,23 +24,12 @@ bool is_prime_fermat(long long n, int k) {
     for (int i = 0; i < k; i++) {
         long long a = dist(gen);
         auto [gcd, x, y] = extended_gcd2(a, n);
-        if (gcd != 1) return false;  //числа Кармайкла не пройдут
+        if (gcd != 1) return false;  
         if (mod_pow(a, n - 1, n) != 1) return false;
     }
     return true;
 }
 
-// long long extended_gcd(long long a, long long b, long long &x, long long &y) {
-//     if (b == 0) {
-//         x = 1; y = 0;
-//         return a;
-//     }
-//     long long x1, y1;
-//     long long gcd = extended_gcd(b, a % b, x1, y1);
-//     x = y1;
-//     y = x1 - (a / b) * y1;
-//     return gcd;
-// }
 
 std::tuple<long long, long long, long long> extended_gcd2(long long a, long long b) {
     long long u1 = a, u2 = 1, u3 = 0;
@@ -57,14 +46,6 @@ std::tuple<long long, long long, long long> extended_gcd2(long long a, long long
     }
     return {u1, u2, u3};
 }
-
-// // Вариант 1: ввод чисел с клавиатуры
-// std::pair<long long, long long> input_ab() {
-//     long long a, b;
-//     std::cout << "Введите a и b: ";
-//     std::cin >> a >> b;
-//     return {a, b};
-// }
 
 std::pair<long long, long long> random_ab() {
     std::mt19937_64 gen(std::time(nullptr));

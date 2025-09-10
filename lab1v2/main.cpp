@@ -1,6 +1,6 @@
 #include <iostream>
 //#include "src/crypto.hpp"
-#include <crypto.hpp>
+#include "src/crypto.hpp"
 
 int main() {
     // 1) Быстрое возведение в степень
@@ -25,8 +25,6 @@ int main() {
     long long a1, b1;
     std::cout << "Введите a1 и b1: ";
     std::cin >> a1 >> b1;
-    //auto [a1, b1] = input_ab();
-    //long long x1, y1;
     auto [gcd1, x1, y1]= extended_gcd2(a1, b1);
     std::cout << "НОД(" << a1 << ", " << b1 << ") = " << gcd1 << "\n";
     std::cout << "Уравнение: " << a1 << "*" << x1 << " + " << b1 << "*" << y1 << " = " << gcd1 << "\n\n";
@@ -34,7 +32,6 @@ int main() {
     // Вариант 2: случайные a, b
     std::cout << "--- Расширенный алгоритм Евклида (random_ab) ---\n";
     auto [a2, b2] = random_ab();
-    //long long x2, y2;
     auto [gcd2, x2, y2] = extended_gcd2(a2, b2);
     std::cout << "Случайные числа: a=" << a2 << ", b=" << b2 << "\n";
     std::cout << "НОД(" << a2 << ", " << b2 <<  ") = " << gcd2 << "\n";

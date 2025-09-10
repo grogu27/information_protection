@@ -155,13 +155,8 @@ void interactive_menu() {
 }
 
 int main() {
-    // Демонстрация работы с большими числами
     demonstrate_large_numbers();
-    
     std::cout << "\n" << std::string(50, '=') << "\n" << std::endl;
-    
-    // Интерактивное меню
     interactive_menu();
-    
     return 0;
 }
