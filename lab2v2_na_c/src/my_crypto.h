@@ -18,5 +18,5 @@ void random_ab(long long *a, long long *b);
 void random_prime_ab(long long *a, long long *b);
 
 long long discrete_log(long long a, long long y, long long p); //O(sqrt(p) * log p)
-
+// p=107, a=88, y=47      x = 62 
 #endif // MY_CRYPTO_H

@@ -117,6 +117,8 @@ void random_prime_ab(long long *a, long long *b) {
         long long value;
     } Pair;
 
+    int pair_count = 0;
+
     static Pair pairs[PAIR_SIZE];
 
     static void pair_clear() {
@@ -124,23 +126,34 @@ void random_prime_ab(long long *a, long long *b) {
             pairs[i].key = -1;
     }
 
-    static void pair_insert(long long k, long long v) {
-        long long idx = k % PAIR_SIZE;
-        while (pairs[idx].key != -1) idx = (idx + 1) % PAIR_SIZE;
-        pairs[idx].key = k;
-        pairs[idx].value = v;
+    // static void pair_insert(long long k, long long v) {
+    //     long long idx = k % PAIR_SIZE;
+    //     while (pairs[idx].key != -1) idx = (idx + 1) % PAIR_SIZE;
+    //     pairs[idx].key = k;
+    //     pairs[idx].value = v;
+    // }
+
+       // static long long pair_find(long long k) {
+    //     long long idx = k % PAIR_SIZE;
+    //     while (pairs[idx].key != -1) {
+    //         if (pairs[idx].key == k)
+    //             return pairs[idx].value;
+    //         idx = (idx + 1) % PAIR_SIZE;
+    //     }
+    //     return -1;  // не найдено
+    // }
+
+    void pair_insert(long long k, long long v) {
+        pairs[pair_count++] = (Pair){k, v};
+    }
+    long long pair_find(long long k) {
+        for (int i = 0; i < pair_count; i++)
+            if (pairs[i].key == k)
+                return pairs[i].value;
+        return -1;
     }
 
-    static long long pair_find(long long k) {
-        long long idx = k % PAIR_SIZE;
-        while (pairs[idx].key != -1) {
-            if (pairs[idx].key == k)
-                return pairs[idx].value;
-            idx = (idx + 1) % PAIR_SIZE;
-        }
-        return -1;  // не найдено
-    }
-
+ 
     long long discrete_log(long long a, long long y, long long p) {
         long long n = (long long)sqrt(p) + 1;
 
