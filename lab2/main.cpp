@@ -74,15 +74,15 @@ int main() {
             std::cout << "Найдено x = " << x << "\n";
             // Проверка
             if (mod_pow(a, x, p) == y % p) {
-                std::cout << "✅ Проверка: a^x mod p = y — верно!\n";
+                std::cout << "Проверка: a^x mod p = y — верно!\n";
             } else {
-                std::cout << "❌ Ошибка: a^x mod p != y\n";
+                std::cout << "Ошибка: a^x mod p != y\n";
             }
         }
     } else if (choice == 2) {
         auto [a, y, p, x_found] = bsgs_with_random_params();
         if (a == -1) {
-            std::cout << "❌ Не удалось сгенерировать параметры.\n";
+            std::cout << "Не удалось сгенерировать параметры.\n";
         } else {
             std::cout << "Сгенерировано:\n";
             std::cout << "   a = " << a << "\n";
@@ -92,9 +92,9 @@ int main() {
 
             if (x_found != -1) {
                 if (mod_pow(a, x_found, p) == y % p) {
-                    std::cout << "✅ Проверка пройдена: a^x mod p = y\n";
+                    std::cout << "Проверка пройдена: a^x mod p = y\n";
                 } else {
-                    std::cout << "❌ Ошибка в вычислениях!\n";
+                    std::cout << "Ошибка в вычислениях!\n";
                 }
             }
         }
