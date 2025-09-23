@@ -114,7 +114,7 @@ void random_prime_ab(long long *a, long long *b) {
 }
     typedef struct {
         long long key;
-        long long value;
+        long long value;       //key — это 𝑎^𝑗 modp ,value — это сам показатель j. x=i⋅n+j
     } Pair;
 
     int pair_count = 0;
@@ -122,8 +122,9 @@ void random_prime_ab(long long *a, long long *b) {
     static Pair pairs[PAIR_SIZE];
 
     static void pair_clear() {
-        for (int i = 0; i < PAIR_SIZE; i++)
-            pairs[i].key = -1;
+        pair_count = 0;
+        //for (int i = 0; i < PAIR_SIZE; i++)
+            //pairs[i].key = -1;
     }
 
     // static void pair_insert(long long k, long long v) {
@@ -146,6 +147,7 @@ void random_prime_ab(long long *a, long long *b) {
     void pair_insert(long long k, long long v) {
         pairs[pair_count++] = (Pair){k, v};
     }
+
     long long pair_find(long long k) {
         for (int i = 0; i < pair_count; i++)
             if (pairs[i].key == k)
@@ -161,26 +163,26 @@ void random_prime_ab(long long *a, long long *b) {
 
         // Шаг младенца: a^j mod p
         long long aj = 1;
-        for (long long j = 0; j < n; j++) {
-            pair_insert(aj, j);
+        for (long long j = 0; j < n; j++) {           // O(n)    O(sqrt(p))
+            pair_insert(aj, j);          
             aj = (aj * a) % p;
         }
 
         // a^(-n) mod p
         long long inv_a = a, x, y0;
-        extended_gcd2(a, p, &x, &y0);
+        extended_gcd2(a, p, &x, &y0);   // O(logp)
         if (x < 0) x += p;
-        inv_a = mod_pow(x, n, p); // a^(-n) mod p
+        inv_a = mod_pow(x, n, p); // a^(-n) mod p      O(log n) = O(log √p) = O(log p)
 
         long long gamma = y;
         for (long long i = 0; i <= n; i++) {
-            long long j = pair_find(gamma);
+            long long j = pair_find(gamma);                 // O(n^2)    O(p)
             if (j != -1) {
                 return i * n + j;
             }
             gamma = (gamma * inv_a) % p;
         }
 
-        return -1; // решения нет
+        return -1; 
     }
 
