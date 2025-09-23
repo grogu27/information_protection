@@ -2,6 +2,83 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "my_crypto.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <math.h>
+
+#define PAIR_SIZE 100003
+
+int rand_initialized = 0;
+
+int my_rand() {
+    if (rand_initialized == 0) {
+        srand(time(NULL));  
+        rand_initialized = 1;
+    }
+    return rand();
+}
+
+// быстрое возведение в степень
+long long mod_pow(long long a, long long x, long long p) {
+    long long result = 1;
+    a %= p;
+    while (x > 0) {
+        if (x & 1) result = (result * a) % p;
+        a = (a * a) % p;
+        x >>= 1;
+    }
+    return result;
+}
+
+// расширенный алгоритм Евклида (рекурсивный)
+long long extended_gcd(long long a, long long b, long long *x, long long *y) {
+    if (b == 0) {
+        *x = 1;
+        *y = 0;
+        return a;
+    }
+    long long x1, y1;
+    long long gcd = extended_gcd(b, a % b, &x1, &y1);
+    *x = y1;
+    *y = x1 - (a / b) * y1;
+    return gcd;
+}
+
+// расширенный алгоритм Евклида (итеративный)
+long long extended_gcd2(long long a, long long b, long long *x, long long *y) {
+    long long u1 = a, u2 = 1, u3 = 0;
+    long long v1 = b, v2 = 0, v3 = 1;
+
+    while (v1 != 0) {
+        long long q = u1 / v1;
+        long long t1 = u1 % v1;
+        long long t2 = u2 - q * v2;
+        long long t3 = u3 - q * v3;
+
+        u1 = v1; u2 = v2; u3 = v3;
+        v1 = t1; v2 = t2; v3 = t3;
+    }
+
+    *x = u2;
+    *y = u3;
+    return u1;
+}
+
+// тест Ферма
+int is_prime_fermat(long long n, int k) {
+    if (n < 4) return (n == 2 || n == 3);
+
+    for (int i = 0; i < k; i++) {
+        long long a = 2 + my_rand() % (n - 3);
+        long long x, y;
+        if (extended_gcd2(a, n, &x, &y) != 1) return 0;
+        if (mod_pow(a, n - 1, n) != 1) return 0;
+    }
+    return 1;
+}
+
 typedef struct {
     long long key;
     long long value;
@@ -24,38 +101,6 @@ long long binary_search(Pair *arr, int size, long long key) {
         else right = mid - 1;
     }
     return -1;
-}
-
-// Быстрое возведение в степень по модулю
-long long mod_pow(long long a, long long x, long long p) {
-    long long result = 1;
-    a %= p;
-    while (x > 0) {
-        if (x & 1) result = (result * a) % p;
-        a = (a * a) % p;
-        x >>= 1;
-    }
-    return result;
-}
-
-// Расширенный алгоритм Евклида для обратного элемента
-long long extended_gcd2(long long a, long long b, long long *x, long long *y) {
-    long long u1 = a, u2 = 1, u3 = 0;
-    long long v1 = b, v2 = 0, v3 = 1;
-
-    while (v1 != 0) {
-        long long q = u1 / v1;
-        long long t1 = u1 % v1;
-        long long t2 = u2 - q * v2;
-        long long t3 = u3 - q * v3;
-
-        u1 = v1; u2 = v2; u3 = v3;
-        v1 = t1; v2 = t2; v3 = t3;
-    }
-
-    *x = u2;
-    *y = u3;
-    return u1;
 }
 
 // Алгоритм "Шаг младенца, шаг великана"
