@@ -168,13 +168,13 @@ void random_prime_ab(long long *a, long long *b) {
 
         // a^(-n) mod p
         long long inv_a = a, x, y0;
-        extended_gcd2(a, p, &x, &y0);
+        extended_gcd2(a, p, &x, &y0); // найти обратный элемент a^-1 modp, x = a^-1
         if (x < 0) x += p;
         inv_a = mod_pow(x, n, p); // a^(-n) mod p
 
         long long gamma = y;
         for (long long i = 0; i <= n; i++) {
-            long long j = pair_find(gamma);
+            long long j = pair_find(gamma); // a^j = y*a^-in modp
             if (j != -1) {
                 return i * n + j;
             }
