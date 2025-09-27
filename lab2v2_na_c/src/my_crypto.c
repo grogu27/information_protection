@@ -170,13 +170,21 @@ void random_prime_ab(long long *a, long long *b) {
 
         // a^(-n) mod p
         long long inv_a = a, x, y0;
+<<<<<<< HEAD
+        extended_gcd2(a, p, &x, &y0); // найти обратный элемент a^-1 modp, x = a^-1
+=======
         extended_gcd2(a, p, &x, &y0);   // O(logp)
+>>>>>>> ec85106fb7c0daa7390ca201ded1ea8c3c7e5e02
         if (x < 0) x += p;
         inv_a = mod_pow(x, n, p); // a^(-n) mod p      O(log n) = O(log √p) = O(log p)
 
         long long gamma = y;
         for (long long i = 0; i <= n; i++) {
+<<<<<<< HEAD
+            long long j = pair_find(gamma); // a^j = y*a^-in modp
+=======
             long long j = pair_find(gamma);                 // O(n^2)    O(p)
+>>>>>>> ec85106fb7c0daa7390ca201ded1ea8c3c7e5e02
             if (j != -1) {
                 return i * n + j;
             }
