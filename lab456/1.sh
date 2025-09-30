@@ -2,4 +2,4 @@
 	sudo cp /src/crypto_lib.hpp /usr/local/include/
 	sudo ldconfig
 
-    g++ main.cpp -lcrypto
+    #g++ main.cpp -lcrypto
