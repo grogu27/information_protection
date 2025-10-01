@@ -235,7 +235,6 @@ void diffie_hellman_auto() {
 
 // =============== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ И ЛАБЫ 4-6 ===============
 
-// Вспомогательная функция: модульное обратное
 long long mod_inverse(long long a, long long m) {
     auto [g, x, y] = extended_gcd2(a, m);
     if (g != 1) return -1;
@@ -244,90 +243,6 @@ long long mod_inverse(long long a, long long m) {
     return x;
 }
 
-// Генерация простого > 256 (уже определена выше, но оставляем объявление здесь)
-// long long generate_prime_for_crypto();  -- определено раньше
-
-// =============== ЛАБА 4: АФФИННЫЙ ШИФР ("Шамир") ===============
-bool shamir_process_file(const std::string& in_file, const std::string& out_file,
-                         long long C1, long long C2, long long p, bool decrypt) {
-    std::ifstream in(in_file, std::ios::binary);
-    std::ofstream out(out_file, std::ios::binary);
-    if (!in || !out) return false;
-
-    if (decrypt) {
-        long long inv = mod_inverse(C1, p);
-        if (inv == -1) return false;
-        char byte;
-        while (in.read(&byte, 1)) {
-            long long y = static_cast<unsigned char>(byte);
-            long long x = ((y - C2 + p) % p * inv) % p;
-            if (x > 255) return false;
-            out.put(static_cast<char>(x));
-        }
-    } else {
-        char byte;
-        while (in.read(&byte, 1)) {
-            long long x = static_cast<unsigned char>(byte);
-            long long y = (C1 * x + C2) % p;
-            if (y > 255) {
-                std::cerr << "Ошибка: p слишком мало, y = " << y << " > 255\n";
-                return false;
-            }
-            out.put(static_cast<char>(y));
-        }
-    }
-    return true;
-}
-
-void lab4_shamir() {
-    int mode;
-    std::cout << "\n--- Лабораторная №4: Аффинный шифр (\"Шамир\") ---\n";
-    std::cout << "1. Ввести p, C1, C2 вручную\n";
-    std::cout << "2. Сгенерировать параметры\n";
-    std::cin >> mode;
-
-    long long p, C1, C2;
-    if (mode == 1) {
-        std::cout << "p (простое, >256): "; std::cin >> p;
-        std::cout << "C1 (1 <= C1 < p, gcd(C1,p)=1): "; std::cin >> C1;
-        std::cout << "C2 (0 <= C2 < p): "; std::cin >> C2;
-        if (C1 <= 0 || C1 >= p || C2 < 0 || C2 >= p) {
-            std::cerr << "Неверные границы!\n"; return;
-        }
-        if (mod_inverse(C1, p) == -1) {
-            std::cerr << "C1 не обратим по модулю p!\n"; return;
-        }
-    } else {
-        p = generate_prime_for_crypto();
-        std::random_device rd;
-        std::mt19937_64 gen(rd());
-        std::uniform_int_distribution<long long> dist(1, p - 1);
-        C1 = dist(gen);
-        while (mod_inverse(C1, p) == -1) C1 = dist(gen);
-        C2 = dist(gen) % p;
-        std::cout << "Сгенерировано: p=" << p << ", C1=" << C1 << ", C2=" << C2 << "\n";
-    }
-
-    std::string in_file, out_file;
-    std::cout << "Входной файл: "; std::cin >> in_file;
-    std::cout << "Выходной файл: "; std::cin >> out_file;
-
-    int op; std::cout << "1. Шифровать  2. Расшифровать: "; std::cin >> op;
-    if (op == 1) {
-        if (shamir_process_file(in_file, out_file, C1, C2, p, false))
-            std::cout << "Успешно зашифровано.\n";
-        else
-            std::cerr << "Ошибка шифрования.\n";
-    } else if (op == 2) {
-        if (shamir_process_file(in_file, out_file, C1, C2, p, true))
-            std::cout << "Успешно расшифровано.\n";
-        else
-            std::cerr << "Ошибка расшифровки.\n";
-    }
-}
-
-// =============== ЛАБА 5: ЭЛЬ-ГАМАЛЬ ===============
-// Запись/чтение 8-байтового числа
 void write_long(std::ofstream& out, long long val) {
     for (int i = 0; i < 8; ++i) {
         out.put(static_cast<char>(val & 0xFF));
@@ -335,164 +250,153 @@ void write_long(std::ofstream& out, long long val) {
     }
 }
 
-long long read_long(std::ifstream& in) {
-    long long val = 0;
+// Считать 8-байтовое число; вернуть true при успешном чтении, false при EOF/ошибке
+bool read_long(std::ifstream& in, long long &val) {
+    val = 0;
     for (int i = 0; i < 8; ++i) {
         char byte;
-        if (!in.get(byte)) return -1;
+        if (!in.get(byte)) return false; // EOF или ошибка — сообщаем вызывающему
         val |= (static_cast<unsigned long long>(static_cast<unsigned char>(byte)) << (8 * i));
     }
-    return val;
-}
-
-bool elgamal_process_file(const std::string& in_file, const std::string& out_file,
-                          long long p, long long g, long long y, long long x, bool decrypt) {
-    std::ifstream in(in_file, std::ios::binary);
-    std::ofstream out(out_file, std::ios::binary);
-    if (!in || !out) return false;
-
-    if (decrypt) {
-        long long a, b;
-        while ((a = read_long(in)) != -1 && (b = read_long(in)) != -1) {
-            long long s = mod_pow(a, x, p);
-            long long s_inv = mod_inverse(s, p);
-            if (s_inv == -1) return false;
-            long long m = (b * s_inv) % p;
-            if (m > 255) return false;
-            out.put(static_cast<char>(m));
-        }
-    } else {
-        std::random_device rd;
-        std::mt19937_64 gen(rd());
-        std::uniform_int_distribution<long long> k_dist(1, p - 2);
-
-        char byte;
-        while (in.read(&byte, 1)) {
-            long long m = static_cast<unsigned char>(byte);
-            long long k = k_dist(gen);
-            long long a = mod_pow(g, k, p);
-            long long b = (m * mod_pow(y, k, p)) % p;
-            write_long(out, a);
-            write_long(out, b);
-        }
-    }
     return true;
 }
 
-void lab5_elgamal() {
-    int mode;
-    std::cout << "\n--- Лабораторная №5: Эль-Гамаль ---\n";
-    std::cout << "1. Ввести параметры\n2. Сгенерировать ключи\n";
-    std::cin >> mode;
+// =============== ЛАБА 4: ТРЁХЭТАПНЫЙ ПРОТОКОЛ ШАМИРА ===============
 
-    long long p, g, x = -1, y = -1;
-    if (mode == 1) {
-        std::cout << "p (>256): "; std::cin >> p;
-        std::cout << "g (примитивный корень): "; std::cin >> g;
-        std::cout << "y = g^x mod p: "; std::cin >> y;
-        std::cout << "x (приватный ключ): "; std::cin >> x;
-    } else {
-        p = generate_prime_for_crypto();
-        g = find_primitive_root(p);
-        if (g == -1) { std::cerr << "Не найден g\n"; return; }
-        std::random_device rd;
-        std::mt19937_64 gen(rd());
-        std::uniform_int_distribution<long long> dist(1, p - 2);
-        x = dist(gen);
-        y = mod_pow(g, x, p);
-        std::cout << "Сгенерировано:\n p=" << p << "\n g=" << g << "\n x=" << x << "\n y=" << y << "\n";
+// Генерирует (e, d) такие, что e*d ≡ 1 (mod p-1)
+std::pair<long long, long long> generate_shamir_keys(long long p) {
+    long long phi = p - 1; // так как p — простое
+    std::random_device rd;
+    std::mt19937_64 gen(rd());
+    // Убедимся, что phi >= 2
+    if (phi < 2) {
+        std::cerr << "p слишком мало!\n";
+        exit(1);
     }
+    std::uniform_int_distribution<long long> dist(2, phi - 1);
 
-    std::string in_file, out_file;
-    std::cout << "Входной файл: "; std::cin >> in_file;
-    std::cout << "Выходной файл: "; std::cin >> out_file;
-
-    int op; std::cout << "1. Шифровать  2. Расшифровать: "; std::cin >> op;
-    if (op == 1) {
-        if (elgamal_process_file(in_file, out_file, p, g, y, -1, false))
-            std::cout << "Успешно зашифровано.\n";
-        else
-            std::cerr << "Ошибка шифрования.\n";
-    } else if (op == 2) {
-        if (elgamal_process_file(in_file, out_file, p, g, y, x, true))
-            std::cout << "Успешно расшифровано.\n";
-        else
-            std::cerr << "Ошибка расшифровки.\n";
-    }
-}
-
-// =============== ЛАБА 6: RSA ===============
-bool rsa_process_file(const std::string& in_file, const std::string& out_file,
-                      long long n, long long exp, bool decrypt) {
-    std::ifstream in(in_file, std::ios::binary);
-    std::ofstream out(out_file, std::ios::binary);
-    if (!in || !out) return false;
-
-    if (decrypt) {
-        long long c;
-        while ((c = read_long(in)) != -1) {
-            long long m = mod_pow(c, exp, n);
-            if (m > 255) return false;
-            out.put(static_cast<char>(m));
-        }
-    } else {
-        char byte;
-        while (in.read(&byte, 1)) {
-            long long m = static_cast<unsigned char>(byte);
-            if (m >= n) {
-                std::cerr << "Ошибка: m >= n! Увеличьте p, q.\n";
-                return false;
-            }
-            long long c = mod_pow(m, exp, n);
-            write_long(out, c);
-        }
-    }
-    return true;
-}
-
-void lab6_rsa() {
-    int mode;
-    std::cout << "\n--- Лабораторная №6: RSA ---\n";
-    std::cout << "1. Ввести p, q, d\n2. Сгенерировать ключи\n";
-    std::cin >> mode;
-
-    long long p, q, n, e, d;
-    if (mode == 1) {
-        std::cout << "p: "; std::cin >> p;
-        std::cout << "q: "; std::cin >> q;
-        std::cout << "d: "; std::cin >> d;
-        n = p * q;
-        long long phi = (p - 1) * (q - 1);
-        e = mod_inverse(d, phi);
-        if (e == -1) { std::cerr << "Неверный d\n"; return; }
-    } else {
-        auto [p1, q1] = random_prime_ab();
-        p = p1; q = q1;
-        n = p * q;
-        long long phi = (p - 1) * (q - 1);
-        e = 65537;
-        if (e >= phi || mod_inverse(e, phi) == -1) {
-            e = 3;
-            while (e < phi && mod_inverse(e, phi) == -1) e += 2;
-        }
+    long long e, d;
+    int attempts = 0;
+    do {
+        e = dist(gen);
         d = mod_inverse(e, phi);
-        std::cout << "Сгенерировано:\n p=" << p << "\n q=" << q << "\n n=" << n << "\n e=" << e << "\n d=" << d << "\n";
+        attempts++;
+        if (attempts > 1000) {
+            // fallback: попробуем e=2,3,5...
+            static long long small_primes[] = {2,3,5,7,11,13,17,19,23,29};
+            for (long long cand : small_primes) {
+                if (cand < phi) {
+                    d = mod_inverse(cand, phi);
+                    if (d != -1) {
+                        e = cand;
+                        goto found;
+                    }
+                }
+            }
+            std::cerr << "Не удалось сгенерировать ключи для p=" << p << "\n";
+            exit(1);
+        }
+    } while (d == -1);
+    found:
+    return {e, d};
+}
+
+// Применяет операцию x -> x^exp mod p к каждому 8-байтовому блоку
+bool shamir_three_pass_step(const std::string& in_file, const std::string& out_file,
+                            long long exp, long long p) {
+    std::ifstream in(in_file, std::ios::binary);
+    std::ofstream out(out_file, std::ios::binary);
+    if (!in || !out) return false;
+
+    long long block;
+    while (read_long(in, block)) {
+        if (block >= p || block < 0) {
+            std::cerr << "Ошибка: блок вне диапазона [0, p)\n";
+            return false;
+        }
+        long long result = mod_pow(block, exp, p);
+        write_long(out, result);
+    }
+    return true;
+}
+
+void lab4_shamir() {
+    std::cout << "\n--- Лабораторная №4: Трёхэтапный протокол Шамира ---\n";
+
+    long long p = generate_prime_for_crypto();
+    // Убедимся, что p > 256 (для байтов)
+    if (p <= 256) {
+        p = 257; // минимальное подходящее простое
     }
 
-    std::string in_file, out_file;
-    std::cout << "Входной файл: "; std::cin >> in_file;
-    std::cout << "Выходной файл: "; std::cin >> out_file;
+    auto [eA, dA] = generate_shamir_keys(p); // Алиса
+    auto [eB, dB] = generate_shamir_keys(p); // Боб
 
-    int op; std::cout << "1. Шифровать (e)  2. Расшифровать (d): "; std::cin >> op;
-    if (op == 1) {
-        if (rsa_process_file(in_file, out_file, n, e, false))
-            std::cout << "Успешно зашифровано.\n";
-        else
-            std::cerr << "Ошибка шифрования.\n";
-    } else if (op == 2) {
-        if (rsa_process_file(in_file, out_file, n, d, true))
-            std::cout << "Успешно расшифровано.\n";
-        else
-            std::cerr << "Ошибка расшифровки.\n";
+    std::cout << "Сгенерировано:\n";
+    std::cout << "p = " << p << "\n";
+    std::cout << "Алиса: eA=" << eA << ", dA=" << dA << "\n";
+    std::cout << "Боб:   eB=" << eB << ", dB=" << dB << "\n";
+
+    std::string original_file;
+    std::cout << "Исходный файл: "; std::cin >> original_file;
+    std::string stage1 = original_file + ".s1";
+    std::string stage2 = original_file + ".s2";
+    std::string stage3 = original_file + ".s3";
+    std::string decrypted = original_file + ".dec";
+
+    // === Этап 1: Алиса шифрует (M -> M^eA mod p) ===
+    {
+        std::ifstream in(original_file, std::ios::binary);
+        std::ofstream out(stage1, std::ios::binary);
+        if (!in || !out) {
+            std::cerr << "Не удалось открыть файлы этапа 1\n";
+            return;
+        }
+        char byte;
+        while (in.read(&byte, 1)) {
+            long long M = static_cast<unsigned char>(byte); // 0..255
+            if (M >= p) {
+                std::cerr << "Ошибка: p слишком мало для данных!\n";
+                return;
+            }
+            long long C1 = mod_pow(M, eA, p);
+            write_long(out, C1);
+        }
     }
+    std::cout << "Этап 1 (Алиса): " << stage1 << "\n";
+
+    // === Этап 2: Боб шифрует (C1 -> C1^eB mod p) ===
+    if (!shamir_three_pass_step(stage1, stage2, eB, p)) {
+        std::cerr << "Ошибка на этапе 2\n";
+        return;
+    }
+    std::cout << "Этап 2 (Боб): " << stage2 << "\n";
+
+    // === Этап 3: Алиса расшифровывает (C2 -> C2^dA mod p) ===
+    if (!shamir_three_pass_step(stage2, stage3, dA, p)) {
+        std::cerr << "Ошибка на этапе 3\n";
+        return;
+    }
+    std::cout << "Этап 3 (Алиса): " << stage3 << "\n";
+
+    // === Боб расшифровывает (C3 -> C3^dB mod p) ===
+    {
+        std::ifstream in(stage3, std::ios::binary);
+        std::ofstream out(decrypted, std::ios::binary);
+        if (!in || !out) {
+            std::cerr << "Не удалось открыть файлы расшифровки\n";
+            return;
+        }
+        long long block;
+        while (read_long(in, block)) {
+            long long M = mod_pow(block, dB, p);
+            if (M < 0 || M > 255) {
+                std::cerr << "Ошибка: восстановленный байт вне диапазона [0,255]\n";
+                return;
+            }
+            out.put(static_cast<char>(static_cast<unsigned char>(M)));
+        }
+    }
+    std::cout << "Расшифровано: " << decrypted << "\n";
+    std::cout << "Готово! Сравните " << original_file << " и " << decrypted << "\n";
 }
