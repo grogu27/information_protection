@@ -413,11 +413,9 @@ void elgamal_encrypt_file(const std::string& input_file, const std::string& outp
         std::cerr << "Ошибка открытия файлов для шифрования\n";
         return;
     }
-
     std::random_device rd;
     std::mt19937_64 gen(rd());
     std::uniform_int_distribution<long long> dist(1, p-2);
-
     char byte;
     while (in.read(&byte, 1)) {
         long long m = static_cast<unsigned char>(byte);
