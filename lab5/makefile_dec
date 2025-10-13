@@ -22,3 +22,11 @@ test_mod_pow: test_mod_pow.cpp $(LIB_DIR)/$(LIB_NAME)
 
 clean:
 	rm -f $(SRC_DIR)/*.o $(LIB_DIR)/*.a main
+
+
+# Сгенерированные параметры:
+# p = 817933
+# g = 2
+# x (секретный) = 149764
+# y (открытый) = 111302
+# sha256sum makefile makefile_dec
