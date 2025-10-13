@@ -13,6 +13,8 @@ int main() {
         std::cout << "6. (Лаб.4) Шифр Шамира\n";
         std::cout << "7. (Лаб.5) Шифр Эль-Гамаля\n";  
         std::cout << "8. (Лаб.6) RSA\n";
+        std::cout << "9. (Лаб.7) Шифр Вернама (с Диффи-Хеллманом)\n";
+        std::cout << "10. (Лаб.8) Электронная подпись RSA\n";
         std::cout << "0. Выход\n";
         std::cout << "Выбор: ";
         std::cin >> choice;
@@ -61,6 +63,12 @@ int main() {
         }
         else if (choice == 8) {
             lab6_rsa();
+        }
+        else if (choice == 9) {
+            lab7_vernam();
+        }
+        else if (choice == 10) {
+            lab8_rsa_signature();
         }
 
         else std::cout << "Неверный выбор.\n";

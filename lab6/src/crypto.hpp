@@ -4,6 +4,7 @@
 
 #include <string>
 #include <utility>
+#include <vector>
 
 // Лаб 1: Базовые функции
 long long mod_pow(long long a, long long x, long long p);
@@ -46,5 +47,14 @@ std::tuple<long long, long long, long long> generate_rsa_keys(long long p, long 
 void rsa_encrypt_file(const std::string &input_file, const std::string &output_file, long long n, long long e);
 void rsa_decrypt_file(const std::string &input_file, const std::string &output_file, long long n, long long d);
 void lab6_rsa();
+
+// Лаб 7: Шифр Вернама с генерацией ключа через Диффи-Хеллмана
+void lab7_vernam();
+
+// Лаб 8: Электронная подпись RSA
+std::vector<unsigned char> compute_sha256(const std::string& filename);
+void rsa_sign_file(const std::string& input_file, const std::string& sig_file, long long n, long long d);
+bool rsa_verify_file(const std::string& input_file, const std::string& sig_file, long long n, long long e);
+void lab8_rsa_signature();
 
 #endif
