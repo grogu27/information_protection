@@ -550,7 +550,6 @@ void lab5_elgamal() {
 // Возвращает (n, e, d). Если p==0 && q==0 — сгенерирует p,q автоматически.
 std::tuple<long long, long long, long long> generate_rsa_keys(long long p, long long q) {
     if (p == 0 && q == 0) {
-        // Генерация п только в учебных пределах — используем ваш генератор
         auto pr = random_prime_ab();
         p = pr.first;
         q = pr.second;
@@ -613,16 +612,30 @@ void rsa_encrypt_file(const std::string &input_file, const std::string &output_f
         return;
     }
 
-    // вычисляем block_size (сколько байт помещается в m < n)
     unsigned long long max_plain = (unsigned long long)(n - 1);
+    
+    // Определяем сколько БАЙТ можно представить числом < n
     int block_size = 0;
     unsigned long long temp = max_plain;
-    while (temp > 0) {
+    
+    // Считаем сколько полных байт помещается
+    while (temp >= 255) {
         block_size++;
-        temp >>= 8;
+        temp >>= 8;  // Делим на 256
     }
-    if (block_size <= 0) block_size = 1;
-    if (block_size > 8) block_size = 8; // ограничение по использованию uint64
+    
+    // Всегда оставляем запас в 1 байт для безопасности
+    if (block_size > 1) {
+        block_size--;
+    } else {
+        block_size = 1;  // Минимум 1 байт
+    }
+    
+    // Ограничиваем максимальный размер блока
+    if (block_size > 8) block_size = 8;
+    
+    std::cout << "DEBUG: n=" << n << " max_plain=" << max_plain << " block_size=" << block_size << "\n";
+    // ========== КОНЕЦ ИСПРАВЛЕНИЯ ==========
 
     // получаем размер исходного файла
     in.seekg(0, std::ios::end);
@@ -633,18 +646,29 @@ void rsa_encrypt_file(const std::string &input_file, const std::string &output_f
     write_long(out, (long long)orig_size);
     out.put(static_cast<char>(block_size));
 
+    std::cout << "Начинаю шифрование... Размер файла: " << orig_size << " байт\n";
+
     // чтение блоков
+    unsigned long long block_count = 0;
     while (true) {
         unsigned long long m = 0;
         int read_bytes = read_block_bytes(in, (unsigned int)block_size, m);
         if (read_bytes == 0) break;
+        
+        block_count++;
+        
+        // Дополнительная проверка
         if (m >= (unsigned long long)n) {
-            std::cerr << "Ошибка: блок >= n. Увеличьте p,q (n слишком мало).\n";
+            std::cerr << "Ошибка: блок " << block_count << " >= n. m=" << m << " n=" << n << "\n";
+            std::cerr << "Прочитано байт: " << read_bytes << "\n";
             return;
         }
+        
         long long c = mod_pow((long long)m, e, n);
         write_long(out, c);
     }
+    
+    std::cout << "Успешно зашифровано " << block_count << " блоков\n";
     std::cout << "RSA: файл зашифрован: " << output_file << "\n";
 }
 
@@ -782,72 +806,86 @@ bool vernam_xor_file(const std::string& input_file, const std::string& output_fi
 void lab7_vernam() {
     std::cout << "\n--- Лабораторная №7: Шифр Вернама с Диффи-Хеллманом ---\n";
 
-    std::string input_file, output_file;
-    std::cout << "Входной файл: ";
-    std::cin >> input_file;
-    std::cout << "Выходной файл: ";
-    std::cin >> output_file;
+    // 1. Запрашиваем имя исходного файла
+    std::string original_file;
+    std::cout << "Введите имя файла для обработки: ";
+    std::cin >> original_file;
 
-    int mode;
-    std::cout << "1. Шифрование\n2. Расшифрование\nВыбор: ";
-    std::cin >> mode;
+    // 2. Определяем имена выходных файлов
+    std::string encrypted_file = original_file + "_enc";
+    std::string decrypted_file = original_file + "_dec";
 
-    // Получаем размер файла
-    std::ifstream check_size(input_file, std::ios::binary);
-    if (!check_size) {
-        std::cerr << "Не удалось открыть входной файл\n";
+    // 3. Получаем размер исходного файла
+    std::ifstream file_check(original_file, std::ios::binary);
+    if (!file_check) {
+        std::cerr << "Ошибка: не удалось открыть файл '" << original_file << "'\n";
         return;
     }
-    check_size.seekg(0, std::ios::end);
-    size_t file_size = static_cast<size_t>(check_size.tellg());
-    check_size.close();
+    file_check.seekg(0, std::ios::end);
+    size_t file_size = static_cast<size_t>(file_check.tellg());
+    file_check.close();
 
     if (file_size == 0) {
-        std::cerr << "Файл пуст\n";
+        std::cerr << "Ошибка: файл пуст\n";
         return;
     }
 
-    // === Генерация общего секрета через Диффи-Хеллмана ===
-    long long p = generate_prime_for_crypto();
-    long long g = find_primitive_root(p);
+    // 4. Генерация общего секрета через Диффи-Хеллман (симуляция Алисы и Боба)
+    long long p = generate_prime_for_crypto();          // большое простое число
+    long long g = find_primitive_root(p);              // примитивный корень по модулю p
     if (g == -1) {
-        std::cerr << "Не удалось найти примитивный корень\n";
+        std::cerr << "Ошибка: не удалось найти примитивный корень\n";
         return;
     }
 
+    // Генерация секретных ключей
     std::random_device rd;
     std::mt19937_64 gen(rd());
-    std::uniform_int_distribution<long long> dist(1, p - 2);
+    std::uniform_int_distribution<long long> secret_dist(1, p - 2);
+    long long alice_secret = secret_dist(gen);
+    long long bob_secret   = secret_dist(gen);
 
-    long long Xa = dist(gen); // секрет Алисы
-    long long Xb = dist(gen); // секрет Боба
+    // Открытые ключи
+    long long alice_public = mod_pow(g, alice_secret, p);
+    long long bob_public   = mod_pow(g, bob_secret, p);
 
-    long long A = mod_pow(g, Xa, p); // открытый ключ Алисы
-    long long B = mod_pow(g, Xb, p); // открытый ключ Боба
+    // Общий секрет (должен совпадать)
+    long long shared_secret_alice = mod_pow(bob_public, alice_secret, p);
+    long long shared_secret_bob   = mod_pow(alice_public, bob_secret, p);
 
-    long long shared_secret_A = mod_pow(B, Xa, p); // общий секрет у Алисы
-    long long shared_secret_B = mod_pow(A, Xb, p); // общий секрет у Боба
-
-    if (shared_secret_A != shared_secret_B) {
-        std::cerr << "Ошибка: секреты не совпали!\n";
+    if (shared_secret_alice != shared_secret_bob) {
+        std::cerr << "Критическая ошибка: общие секреты не совпадают!\n";
         return;
     }
 
-    unsigned long long seed = static_cast<unsigned long long>(shared_secret_A % (1ULL << 63));
+    // Преобразуем секрет в seed для генератора (ограничение 63 бита для безопасности)
+    unsigned long long seed = static_cast<unsigned long long>(
+        shared_secret_alice % (1ULL << 63)
+    );
 
-    std::cout << "Сгенерирован общий секрет (seed): " << seed << "\n";
-    std::cout << "Длина файла: " << file_size << " байт\n";
+    std::cout << "Сгенерирован seed на основе общего секрета: " << seed << "\n";
+    std::cout << "Размер файла: " << file_size << " байт\n";
 
-    // Генерируем гамму нужной длины
+    // 5. Генерация гаммы (псевдослучайной последовательности байтов)
     auto gamma = generate_gamma_from_seed(seed, file_size);
 
-    // Применяем XOR (шифрование = расшифрование)
-    if (vernam_xor_file(input_file, output_file, gamma)) {
-        std::cout << "Операция успешно завершена: " << output_file << "\n";
-    } else {
-        std::cerr << "Ошибка при обработке файла\n";
+    // 6. Шифрование: XOR исходного файла с гаммой → зашифрованный файл
+    if (!vernam_xor_file(original_file, encrypted_file, gamma)) {
+        std::cerr << "Ошибка при шифровании\n";
+        return;
     }
+    std::cout << "Зашифровано: " << encrypted_file << "\n";
+
+    // 7. Расшифрование: XOR зашифрованного файла с той же гаммой → восстановленный файл
+    if (!vernam_xor_file(encrypted_file, decrypted_file, gamma)) {
+        std::cerr << "Ошибка при расшифровании\n";
+        return;
+    }
+    std::cout << "Расшифровано: " << decrypted_file << "\n";
+
+    std::cout << "Готово! Сравните '" << original_file << "' и '" << decrypted_file << "'\n";
 }
+
 
 // ================= ЛАБА 8: ЭЛЕКТРОННАЯ ПОДПИСЬ RSA =================
 
