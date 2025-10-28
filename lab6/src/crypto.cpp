@@ -7,7 +7,7 @@
 #include <climits>
 #include <unordered_map>
 #include <tuple>
-#include <openssl/sha.h>
+//#include <openssl/sha.h>
 #include <vector>
 
 // ================= ЛАБА 1: базовые функции =================
@@ -803,6 +803,9 @@ bool vernam_xor_file(const std::string& input_file, const std::string& output_fi
     return true;
 }
 
+// ================= ЛАБА 7: ШИФР ВЕРНАМА С ДИФФИ-ХЕЛЛМАНОМ =================
+// Автоматически шифрует и расшифровывает файл без запросов пользователю.
+
 void lab7_vernam() {
     std::cout << "\n--- Лабораторная №7: Шифр Вернама с Диффи-Хеллманом ---\n";
 
@@ -881,166 +884,165 @@ void lab7_vernam() {
         std::cerr << "Ошибка при расшифровании\n";
         return;
     }
-    std::cout << "Расшифровано: " << decrypted_file << "\n";
+    std::cout << "асшифровано: " << decrypted_file << "\n";
 
     std::cout << "Готово! Сравните '" << original_file << "' и '" << decrypted_file << "'\n";
 }
 
+// // ================= ЛАБА 8: ЭЛЕКТРОННАЯ ПОДПИСЬ RSA =================
 
-// ================= ЛАБА 8: ЭЛЕКТРОННАЯ ПОДПИСЬ RSA =================
+// std::vector<unsigned char> compute_sha256(const std::string& filename) {
+//     std::ifstream file(filename, std::ios::binary);
+//     if (!file) {
+//         throw std::runtime_error("Не удалось открыть файл для хеширования: " + filename);
+//     }
 
-std::vector<unsigned char> compute_sha256(const std::string& filename) {
-    std::ifstream file(filename, std::ios::binary);
-    if (!file) {
-        throw std::runtime_error("Не удалось открыть файл для хеширования: " + filename);
-    }
+//     SHA256_CTX ctx;
+//     SHA256_Init(&ctx);
 
-    SHA256_CTX ctx;
-    SHA256_Init(&ctx);
+//     char buffer[4096];
+//     while (file.read(buffer, sizeof(buffer)) || file.gcount() > 0) {
+//         SHA256_Update(&ctx, buffer, file.gcount());
+//     }
 
-    char buffer[4096];
-    while (file.read(buffer, sizeof(buffer)) || file.gcount() > 0) {
-        SHA256_Update(&ctx, buffer, file.gcount());
-    }
+//     std::vector<unsigned char> hash(SHA256_DIGEST_LENGTH);
+//     SHA256_Final(hash.data(), &ctx);
+//     return hash;
+// }
 
-    std::vector<unsigned char> hash(SHA256_DIGEST_LENGTH);
-    SHA256_Final(hash.data(), &ctx);
-    return hash;
-}
+// void rsa_sign_file(const std::string& input_file, const std::string& sig_file, long long n, long long d) {
+//     // 1. Вычисляем хеш
+//     auto hash = compute_sha256(input_file);
+//     std::cout << "Хеш (SHA-256) вычислен. Длина: " << hash.size() << " байт\n";
 
-void rsa_sign_file(const std::string& input_file, const std::string& sig_file, long long n, long long d) {
-    // 1. Вычисляем хеш
-    auto hash = compute_sha256(input_file);
-    std::cout << "Хеш (SHA-256) вычислен. Длина: " << hash.size() << " байт\n";
+//     // 2. Подписываем каждый байт
+//     std::ofstream out(sig_file, std::ios::binary);
+//     if (!out) {
+//         throw std::runtime_error("Не удалось создать файл подписи");
+//     }
 
-    // 2. Подписываем каждый байт
-    std::ofstream out(sig_file, std::ios::binary);
-    if (!out) {
-        throw std::runtime_error("Не удалось создать файл подписи");
-    }
+//     // Запишем длину хеша (на случай будущих изменений)
+//     write_long(out, (long long)hash.size());
 
-    // Запишем длину хеша (на случай будущих изменений)
-    write_long(out, (long long)hash.size());
+//     for (unsigned char byte : hash) {
+//         long long m = static_cast<long long>(byte); // 0..255
+//         if (m >= n) {
+//             std::cerr << "Ошибка: n слишком мало! Байт " << m << " >= n=" << n << "\n";
+//             throw std::runtime_error("Модуль n слишком мал для подписи");
+//         }
+//         long long s = mod_pow(m, d, n);
+//         write_long(out, s);
+//     }
+//     std::cout << "Подпись сохранена в: " << sig_file << "\n";
+// }
 
-    for (unsigned char byte : hash) {
-        long long m = static_cast<long long>(byte); // 0..255
-        if (m >= n) {
-            std::cerr << "Ошибка: n слишком мало! Байт " << m << " >= n=" << n << "\n";
-            throw std::runtime_error("Модуль n слишком мал для подписи");
-        }
-        long long s = mod_pow(m, d, n);
-        write_long(out, s);
-    }
-    std::cout << "Подпись сохранена в: " << sig_file << "\n";
-}
+// bool rsa_verify_file(const std::string& input_file, const std::string& sig_file, long long n, long long e) {
+//     // 1. Вычисляем хеш файла
+//     auto expected_hash = compute_sha256(input_file);
 
-bool rsa_verify_file(const std::string& input_file, const std::string& sig_file, long long n, long long e) {
-    // 1. Вычисляем хеш файла
-    auto expected_hash = compute_sha256(input_file);
+//     // 2. Читаем подпись
+//     std::ifstream in(sig_file, std::ios::binary);
+//     if (!in) {
+//         std::cerr << "Не удалось открыть файл подписи\n";
+//         return false;
+//     }
 
-    // 2. Читаем подпись
-    std::ifstream in(sig_file, std::ios::binary);
-    if (!in) {
-        std::cerr << "Не удалось открыть файл подписи\n";
-        return false;
-    }
+//     long long hash_len_ll;
+//     if (!read_long(in, hash_len_ll)) {
+//         std::cerr << "Ошибка чтения длины хеша из подписи\n";
+//         return false;
+//     }
+//     size_t hash_len = static_cast<size_t>(hash_len_ll);
 
-    long long hash_len_ll;
-    if (!read_long(in, hash_len_ll)) {
-        std::cerr << "Ошибка чтения длины хеша из подписи\n";
-        return false;
-    }
-    size_t hash_len = static_cast<size_t>(hash_len_ll);
+//     if (hash_len != expected_hash.size()) {
+//         std::cerr << "Несовпадение длины хеша: ожидалось " << expected_hash.size()
+//                   << ", получено " << hash_len << "\n";
+//         return false;
+//     }
 
-    if (hash_len != expected_hash.size()) {
-        std::cerr << "Несовпадение длины хеша: ожидалось " << expected_hash.size()
-                  << ", получено " << hash_len << "\n";
-        return false;
-    }
+//     std::vector<unsigned char> recovered_hash(hash_len);
+//     for (size_t i = 0; i < hash_len; ++i) {
+//         long long s;
+//         if (!read_long(in, s)) {
+//             std::cerr << "Ошибка чтения подписи на позиции " << i << "\n";
+//             return false;
+//         }
+//         long long m = mod_pow(s, e, n);
+//         if (m < 0 || m > 255) {
+//             std::cerr << "Восстановленное значение вне диапазона байта: " << m << "\n";
+//             return false;
+//         }
+//         recovered_hash[i] = static_cast<unsigned char>(m);
+//     }
 
-    std::vector<unsigned char> recovered_hash(hash_len);
-    for (size_t i = 0; i < hash_len; ++i) {
-        long long s;
-        if (!read_long(in, s)) {
-            std::cerr << "Ошибка чтения подписи на позиции " << i << "\n";
-            return false;
-        }
-        long long m = mod_pow(s, e, n);
-        if (m < 0 || m > 255) {
-            std::cerr << "Восстановленное значение вне диапазона байта: " << m << "\n";
-            return false;
-        }
-        recovered_hash[i] = static_cast<unsigned char>(m);
-    }
+//     // 3. Сравниваем хеши
+//     if (recovered_hash == expected_hash) {
+//         std::cout << "Подпись ВЕРНА!\n";
+//         return true;
+//     } else {
+//         std::cout << "Подпись НЕВЕРНА!\n";
+//         return false;
+//     }
+// }
 
-    // 3. Сравниваем хеши
-    if (recovered_hash == expected_hash) {
-        std::cout << "Подпись ВЕРНА!\n";
-        return true;
-    } else {
-        std::cout << "Подпись НЕВЕРНА!\n";
-        return false;
-    }
-}
+// void lab8_rsa_signature() {
+//     std::cout << "\n--- Лабораторная №8: Электронная подпись RSA ---\n";
 
-void lab8_rsa_signature() {
-    std::cout << "\n--- Лабораторная №8: Электронная подпись RSA ---\n";
+//     int mode;
+//     std::cout << "1. Подписать файл\n2. Проверить подпись\nВыбор: ";
+//     std::cin >> mode;
 
-    int mode;
-    std::cout << "1. Подписать файл\n2. Проверить подпись\nВыбор: ";
-    std::cin >> mode;
+//     std::string input_file, sig_file;
+//     std::cout << "Имя файла: ";
+//     std::cin >> input_file;
+//     std::cout << "Файл подписи (например, file.sig): ";
+//     std::cin >> sig_file;
 
-    std::string input_file, sig_file;
-    std::cout << "Имя файла: ";
-    std::cin >> input_file;
-    std::cout << "Файл подписи (например, file.sig): ";
-    std::cin >> sig_file;
+//     if (mode == 1) {
+//         // Подпись
+//         int key_mode;
+//         std::cout << "1. Ввести p, q вручную\n2. Сгенерировать автоматически\nВыбор: ";
+//         std::cin >> key_mode;
 
-    if (mode == 1) {
-        // Подпись
-        int key_mode;
-        std::cout << "1. Ввести p, q вручную\n2. Сгенерировать автоматически\nВыбор: ";
-        std::cin >> key_mode;
+//         long long p = 0, q = 0, n, e, d;
+//         if (key_mode == 1) {
+//             std::cout << "p q: "; std::cin >> p >> q;
+//             auto keys = generate_rsa_keys(p, q);
+//             n = std::get<0>(keys); e = std::get<1>(keys); d = std::get<2>(keys);
+//             if (n == -1) {
+//                 std::cerr << "Ошибка генерации ключей\n";
+//                 return;
+//             }
+//         } else {
+//             auto keys = generate_rsa_keys(0, 0);
+//             n = std::get<0>(keys); e = std::get<1>(keys); d = std::get<2>(keys);
+//             if (n == -1) {
+//                 std::cerr << "Ошибка генерации ключей\n";
+//                 return;
+//             }
+//             std::cout << "Сгенерированы ключи:\n";
+//             std::cout << "n = " << n << "\n";
+//             std::cout << "e = " << e << " (открытый)\n";
+//             std::cout << "d = " << d << " (секретный)\n";
+//         }
 
-        long long p = 0, q = 0, n, e, d;
-        if (key_mode == 1) {
-            std::cout << "p q: "; std::cin >> p >> q;
-            auto keys = generate_rsa_keys(p, q);
-            n = std::get<0>(keys); e = std::get<1>(keys); d = std::get<2>(keys);
-            if (n == -1) {
-                std::cerr << "Ошибка генерации ключей\n";
-                return;
-            }
-        } else {
-            auto keys = generate_rsa_keys(0, 0);
-            n = std::get<0>(keys); e = std::get<1>(keys); d = std::get<2>(keys);
-            if (n == -1) {
-                std::cerr << "Ошибка генерации ключей\n";
-                return;
-            }
-            std::cout << "Сгенерированы ключи:\n";
-            std::cout << "n = " << n << "\n";
-            std::cout << "e = " << e << " (открытый)\n";
-            std::cout << "d = " << d << " (секретный)\n";
-        }
+//         try {
+//             rsa_sign_file(input_file, sig_file, n, d);
+//             std::cout << "Открытый ключ (n, e) = (" << n << ", " << e << ")\n";
+//             std::cout << "Сохраните его для проверки подписи!\n";
+//         } catch (const std::exception& ex) {
+//             std::cerr << "Ошибка: " << ex.what() << "\n";
+//         }
 
-        try {
-            rsa_sign_file(input_file, sig_file, n, d);
-            std::cout << "Открытый ключ (n, e) = (" << n << ", " << e << ")\n";
-            std::cout << "Сохраните его для проверки подписи!\n";
-        } catch (const std::exception& ex) {
-            std::cerr << "Ошибка: " << ex.what() << "\n";
-        }
-
-    } else if (mode == 2) {
-        // Проверка
-        long long n, e;
-        std::cout << "Введите открытый ключ (n e): ";
-        std::cin >> n >> e;
-        if (!rsa_verify_file(input_file, sig_file, n, e)) {
-            std::cerr << "Проверка подписи не пройдена.\n";
-        }
-    } else {
-        std::cout << "Неверный режим.\n";
-    }
-}
+//     } else if (mode == 2) {
+//         // Проверка
+//         long long n, e;
+//         std::cout << "Введите открытый ключ (n e): ";
+//         std::cin >> n >> e;
+//         if (!rsa_verify_file(input_file, sig_file, n, e)) {
+//             std::cerr << "Проверка подписи не пройдена.\n";
+//         }
+//     } else {
+//         std::cout << "Неверный режим.\n";
+//     }
+// }

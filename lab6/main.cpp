@@ -67,9 +67,9 @@ int main() {
         else if (choice == 9) {
             lab7_vernam();
         }
-        else if (choice == 10) {
-            lab8_rsa_signature();
-        }
+        // else if (choice == 10) {
+        //     lab8_rsa_signature();
+        // }
 
         else std::cout << "Неверный выбор.\n";
     }
