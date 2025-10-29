@@ -769,11 +769,9 @@ void lab6_rsa() {
 
 // ================= ЛАБА 7: ШИФР ВЕРНАМА С ДИФФИ-ХЕЛЛМАНОМ =================
 
-// Генерирует псевдослучайную гамму заданной длины из seed (с использованием простого LCG)
 std::vector<unsigned char> generate_gamma_from_seed(unsigned long long seed, size_t length) {
     std::vector<unsigned char> gamma(length);
     unsigned long long state = seed;
-    // Простой LCG (Linear Congruential Generator) — НЕ для реального использования!
     const unsigned long long a = 6364136223846793005ULL;
     const unsigned long long c = 1442695040888963407ULL;
     for (size_t i = 0; i < length; ++i) {
@@ -802,9 +800,6 @@ bool vernam_xor_file(const std::string& input_file, const std::string& output_fi
     }
     return true;
 }
-
-// ================= ЛАБА 7: ШИФР ВЕРНАМА С ДИФФИ-ХЕЛЛМАНОМ =================
-// Автоматически шифрует и расшифровывает файл без запросов пользователю.
 
 void lab7_vernam() {
     std::cout << "\n--- Лабораторная №7: Шифр Вернама с Диффи-Хеллманом ---\n";
@@ -886,7 +881,7 @@ void lab7_vernam() {
     }
     std::cout << "асшифровано: " << decrypted_file << "\n";
 
-    std::cout << "Готово! Сравните '" << original_file << "' и '" << decrypted_file << "'\n";
+    std::cout << "Готово! '" << original_file << "' и '" << decrypted_file << "'\n";
 }
 
 // // ================= ЛАБА 8: ЭЛЕКТРОННАЯ ПОДПИСЬ RSA =================
