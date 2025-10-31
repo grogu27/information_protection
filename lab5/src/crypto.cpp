@@ -455,7 +455,7 @@ void elgamal_decrypt_file(const std::string& input_file, const std::string& outp
 
     long long a, b;
     while (read_long(in, a) && read_long(in, b)) {
-        // Вычисляем s = a^x mod p
+        // Вычисляем s = a^x mod p 
         long long s = mod_pow(a, x, p);
         
         // Находим обратный элемент s^{-1} mod p
@@ -513,6 +513,7 @@ void lab5_elgamal() {
         std::uniform_int_distribution<long long> dist(1, p-2);
         
         x = dist(gen);  // Секретный ключ
+        // y = g^x mod p
         y = mod_pow(g, x, p);  // Открытый ключ
         
         std::cout << "Сгенерированные параметры:\n";

@@ -828,7 +828,7 @@ void lab7_vernam() {
         return;
     }
 
-    // 4. Генерация общего секрета через Диффи-Хеллман (симуляция Алисы и Боба)
+    // 4. Генерация p q через Диффи-Хеллман
     long long p = generate_prime_for_crypto();          // большое простое число
     long long g = find_primitive_root(p);              // примитивный корень по модулю p
     if (g == -1) {
