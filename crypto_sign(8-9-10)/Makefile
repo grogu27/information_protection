@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -O2 -Iinclude -Wall -Wno-deprecated-declarations
 LIBS = -lssl -lcrypto
-SRC = src/main.cpp src/rsa_sign.cpp src/elgamal_sign.cpp src/utils.cpp
+SRC = src/main.cpp src/rsa_sign.cpp src/elgamal_sign.cpp src/utils.cpp src/GOST341094.cpp src/gost_sign.cpp
 TARGET = sign_tool
 
 $(TARGET): $(SRC)
