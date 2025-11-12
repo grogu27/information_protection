@@ -1,3 +1,4 @@
+// src/gost_sign.cpp — КОРРЕКТНАЯ ВЕРСИЯ
 #include "../include/gost_sign.h"
 #include "../include/utils.h"
 #include "gost341094.h"
@@ -5,46 +6,20 @@
 
 using namespace std;
 
-void gost_sign_file(const std::string& filename) {
-    cout << "=== GOST R 34.10-94 Signature ===" << endl;
-    
-    // Вычисляем хеш файла
-    auto hash = sha256_file(filename);
-    cout << "File: " << filename << " (SHA256 hash computed)" << endl;
-    
-    // Создаем объект ГОСТ и генерируем ключи
+void gost_sign_and_verify_file(const string& filename) {
     GOST341094 gost;
-    cout << "Generating keys..." << endl;
     gost.generate_keys();
     
-    // Создаем подпись
-    cout << "Creating signature..." << endl;
-    auto signature = gost.sign(hash);
-    
-    // Сохраняем подпись в отдельный файл
-    string sigFilename = filename + ".gost_sig";
-    gost.save_signature(signature, sigFilename);
-    
-    cout << "✓ Signature created and saved to: " << sigFilename << endl;
-}
-
-void gost_verify_file(const std::string& filename) {
-    // Вычисляем хеш файла
     auto hash = sha256_file(filename);
-    
-    // Загружаем подпись
-    GOST341094 gost;
-    string sigFilename = filename + ".gost_sig";
-    auto signature = gost.load_signature(sigFilename);
-    
-    // Проверяем подпись
-    cout << "Verifying signature..." << endl;
-    bool isValid = gost.verify(hash, signature);
-    
-    if (isValid) {
-        cout << "✓ GOST R 34.10-94 signature VERIFIED SUCCESSFULLY" << endl;
+    auto sig = gost.sign(hash);
+    string sigFile = filename + ".gost_sig";
+    gost.save_signature(sig, sigFile);
+    cout << "✓ Signed → " << sigFile << endl;
+
+    auto loaded_sig = gost.load_signature(sigFile);
+    if (gost.verify(hash, loaded_sig)) {
+        cout << "✓ Verified OK" << endl;
     } else {
-        cout << "✗ GOST R 34.10-94 signature VERIFICATION FAILED" << endl;
-        throw runtime_error("Signature verification failed");
+        throw runtime_error("Verification failed");
     }
 }

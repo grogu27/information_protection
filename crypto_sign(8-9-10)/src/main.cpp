@@ -27,8 +27,7 @@ int main(int argc, char* argv[]) {
             elgamal_verify_file(file);
         }
         else if (algo == "gost") {
-            gost_sign_file(file);
-            gost_verify_file(file);
+            gost_sign_and_verify_file(file);
         }
         else {
             std::cerr << "Unknown algorithm. Use 'rsa', 'elgamal' or 'gost'\n";
