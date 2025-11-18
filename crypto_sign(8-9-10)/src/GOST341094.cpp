@@ -6,8 +6,6 @@
 
 using namespace std;
 
-// ----------- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ МОДУЛЬНОЙ АРИФМЕТИКИ (для маленьких чисел) -----------
-
 static uint64_t to_uint64(const std::vector<unsigned char>& v) {
     if (v.empty()) return 0;
     uint64_t res = 0;
@@ -71,10 +69,9 @@ static uint64_t mod_inv(uint64_t a, uint64_t mod) {
 }
 
 GOST341094::GOST341094() {
-    // Упрощенные параметры для демонстрации
     p = from_uint64(1279); // Простое число
     q = from_uint64(71);   // Простой делитель (p-1)
-    a = from_uint64(34);    // Образующий элемент
+    a = from_uint64(34);    // Образующий элемент a^q mod p = 1
 }
 
 bool GOST341094::is_zero(const vector<unsigned char>& n) {
@@ -107,6 +104,9 @@ vector<unsigned char> GOST341094::random_number(const vector<unsigned char>& max
     return result;
 }
 
+// Генерирует случайный закрытый ключ d (1 < d < q)
+// Вычисляет открытый ключ: c = a^d mod p
+// Проверяет корректность: c^q mod p == 1
 void GOST341094::generate_keys() {
     d = random_number(q);
     uint64_t d_val = to_uint64(d);
@@ -123,6 +123,12 @@ void GOST341094::generate_keys() {
     c = from_uint64(y_val);
 }
 
+// Вычисляет h = hash(message) mod q (если h=0, то h=1)
+// Генерирует случайное k (1 < k < q)
+// Вычисляет r = (a^k mod p) mod q
+// Вычисляет s = (k*h + d*r) mod q
+// Если r=0 или s=0, повторяет с новым k
+// Результат: пара (r, s) - цифровая подпись
 pair<vector<unsigned char>, vector<unsigned char>> 
 GOST341094::sign(const vector<unsigned char>& message_hash) {
     uint64_t h = to_uint64(message_hash) % to_uint64(q);
@@ -146,6 +152,13 @@ GOST341094::sign(const vector<unsigned char>& message_hash) {
     return make_pair(from_uint64(r), from_uint64(s));
 }
 
+// Проверяет: 0 < r < q и 0 < s < q
+// Вычисляет h = hash(message) mod q
+// Вычисляет v = h^(-1) mod q
+// Вычисляет z1 = s*v mod q
+// Вычисляет z2 = (-r)*v mod q
+// Вычисляет u = (a^z1 * y^z2 mod p) mod q
+// Если u == r - подпись верна
 bool GOST341094::verify(const vector<unsigned char>& message_hash,
                        const pair<vector<unsigned char>, vector<unsigned char>>& signature) {
     uint64_t r = to_uint64(signature.first);

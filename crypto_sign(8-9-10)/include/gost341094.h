@@ -4,6 +4,14 @@
 #include <utility>
 #include <cstdint>  // Добавлено для uint64_t
 
+// class GOST341094 {
+//     vector<unsigned char> p; // Большое простое число (модуль)
+//     vector<unsigned char> q; // Простой делитель (p-1)
+//     vector<unsigned char> a; // Образующий элемент (1 < a < p-1)
+//     vector<unsigned char> d; // Закрытый ключ (случайное число)
+//     vector<unsigned char> c; // Открытый ключ
+// };
+
 class GOST341094 {
 private:
     std::vector<unsigned char> p, q, a;
