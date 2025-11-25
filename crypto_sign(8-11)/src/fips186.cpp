@@ -225,8 +225,15 @@ void fips_sign_and_verify_file(const std::string& filename) {
     fips.save_signature(signature, sigfile);
     std::cout << "FIPS signature saved to: " << sigfile << std::endl;
 
+    // std::ofstream file("test.txt", ios::app);
+    // if (!file) throw runtime_error("Cannot open file for writing");
+    // file << "АХАХАХАХАХА минус подпись";
+    // file.close();
+
     auto loaded = fips.load_signature(sigfile);
-    bool ok = fips.verify(hash, loaded);
+    auto new_hash = sha256_file(filename);
+    bool ok = fips.verify(new_hash, loaded);
+
     if (ok) std::cout << "FIPS signature verification: OK\n";
     else std::cout << "FIPS signature verification: FAILED\n";
 }
