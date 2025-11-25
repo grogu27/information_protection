@@ -1,16 +1,18 @@
 #include "../include/rsa_sign.h"
 #include "../include/elgamal_sign.h"
 #include "../include/gost_sign.h"
+#include "../include/fips186.h"   
 #include <iostream>
 #include <string>
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
-        std::cerr << "Usage: " << argv[0] << " <rsa|elgamal|gost> <filename>\n";
+        std::cerr << "Usage: " << argv[0] << " <rsa|elgamal|gost|fips> <filename>\n";
         std::cerr << "Examples:\n";
         std::cerr << "  " << argv[0] << " rsa document.txt\n";
         std::cerr << "  " << argv[0] << " elgamal data.bin\n";
         std::cerr << "  " << argv[0] << " gost file.pdf\n";
+        std::cerr << "  " << argv[0] << " fips file.pdf\n";
         return 1;
     }
 
@@ -29,8 +31,11 @@ int main(int argc, char* argv[]) {
         else if (algo == "gost") {
             gost_sign_and_verify_file(file);
         }
+        else if (algo == "fips") {
+            fips_sign_and_verify_file(file); 
+        }
         else {
-            std::cerr << "Unknown algorithm. Use 'rsa', 'elgamal' or 'gost'\n";
+            std::cerr << "Unknown algorithm. Use 'rsa', 'elgamal', 'gost' or 'fips'\n";
             return 1;
         }
     } catch (const std::exception& e) {
