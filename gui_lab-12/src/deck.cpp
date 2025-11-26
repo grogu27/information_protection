@@ -1,21 +1,60 @@
 #include "deck.hpp"
-#include <sstream>
 
-std::string Deck::cardToString(cpp_int card) {
-    if (card < 2 || card > 53) return "??";
-    int idx = static_cast<int>(card.convert_to<long long>()) - 2;
-    static const char* suits[] = {"C","D","H","S"};
-    static const char* ranks[] = {"2","3","4","5","6","7","8","9","10","J","Q","K","A"};
-    int r = idx % 13;
-    int s = idx / 13;
-    std::stringstream ss;
-    ss << ranks[r] << " of " << suits[s];
-    return ss.str();
-}
+// UTF-8 коды для мастей
+const std::string CLUBS    = "C";
+const std::string DIAMONDS = "D"; 
+const std::string HEARTS   = "H";
+const std::string SPADES   = "S";
 
 std::vector<cpp_int> Deck::getInitialDeck() {
     std::vector<cpp_int> deck;
     deck.reserve(52);
-    for (int i = 2; i <= 53; ++i) deck.push_back(cpp_int(i));
+    for (int i = 2; i <= 53; ++i) {
+        deck.push_back(cpp_int(i));
+    }
     return deck;
+}
+
+CardInfo Deck::getCardInfo(cpp_int card_val) {
+    long long v = card_val.convert_to<long long>();
+    if (v < 2 || v > 53) {
+        // ❗ ВАЖНО: 4 поля, 4 типа: string, string, Color, Color
+        return {"??", "?", sf::Color::Magenta, sf::Color(255, 200, 200)};
+    }
+
+    int idx = static_cast<int>(v) - 2;  // 0..51
+    int rank_idx = idx % 13;
+    int suit_idx = idx / 13;
+
+    static const std::string RANKS[] = {
+        "2","3","4","5","6","7","8","9","10","J","Q","K","A"
+    };
+    static const std::string SYMBOLS[] = {
+        CLUBS, DIAMONDS, HEARTS, SPADES
+    };
+    static const sf::Color SUIT_COLORS[] = {
+        sf::Color::Black,        // ♣
+        sf::Color(200, 0, 0),    // ♦
+        sf::Color(200, 0, 0),    // ♥
+        sf::Color::Black         // ♠
+    };
+    static const sf::Color BG_COLORS[] = {
+        sf::Color(30, 30, 30),   // тёмный фон — чёрные масти
+        sf::Color(255, 240, 240),// светлый фон — красные масти
+        sf::Color(255, 240, 240),
+        sf::Color(30, 30, 30)
+    };
+
+    return {
+        RANKS[rank_idx],
+        SYMBOLS[suit_idx],
+        SUIT_COLORS[suit_idx],
+        BG_COLORS[suit_idx]
+    };
+}
+
+// Совместимость: если где-то вызывается cardToString — не падает
+std::string Deck::cardToString(cpp_int card) {
+    auto ci = getCardInfo(card);
+    return ci.rank + " " + ci.suitSymbol;
 }
