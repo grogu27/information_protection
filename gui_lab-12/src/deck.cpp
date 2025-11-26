@@ -23,8 +23,8 @@ int Deck::draw() {
 }
 
 std::string Deck::cardToString(int card) {
-    static const char* suits[] = {"Clubs","Diamonds","Hearts","Spades"};
-    static const char* ranks[] = {"2","3","4","5","6","7","8","9","10","Jack","Queen","King","Ace"};
+    static const char* suits[] = {"C","D","H","S"};
+    static const char* ranks[] = {"2","3","4","5","6","7","8","9","10","J","Q","K","A"};
     int r = card % 13;
     int s = card / 13;
     std::stringstream ss;
