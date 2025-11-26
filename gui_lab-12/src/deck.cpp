@@ -18,7 +18,6 @@ std::vector<cpp_int> Deck::getInitialDeck() {
 CardInfo Deck::getCardInfo(cpp_int card_val) {
     long long v = card_val.convert_to<long long>();
     if (v < 2 || v > 53) {
-        // ❗ ВАЖНО: 4 поля, 4 типа: string, string, Color, Color
         return {"??", "?", sf::Color::Magenta, sf::Color(255, 200, 200)};
     }
 
@@ -53,7 +52,6 @@ CardInfo Deck::getCardInfo(cpp_int card_val) {
     };
 }
 
-// Совместимость: если где-то вызывается cardToString — не падает
 std::string Deck::cardToString(cpp_int card) {
     auto ci = getCardInfo(card);
     return ci.rank + " " + ci.suitSymbol;

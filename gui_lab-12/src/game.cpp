@@ -9,6 +9,7 @@ Game::Game(cpp_int prime, int nPlayers) : p(prime) {
     
     // Учебные ключи (взаимно простые с p-1)
     std::vector<cpp_int> secrets = {7, 9, 5, 11, 13, 17};
+
     for (int i = 0; i < nPlayers; ++i) {
         players.emplace_back(i + 1, p, secrets[i % secrets.size()]);
     }
@@ -79,6 +80,6 @@ bool Game::verify() {
             dec = mod_exp(dec, players[i].d, p);
         if (dec != m) return false;
     }
-    std::cout << "✅ Verification passed.\n";
+    std::cout << "Verification passed.\n";
     return true;
 }
