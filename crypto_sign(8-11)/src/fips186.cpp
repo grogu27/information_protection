@@ -7,7 +7,6 @@
 
 using namespace std;
 
-// ---- Вспомогательные функции (аналогичные тем, что в ГОСТ-файле) ----
 uint64_t FIPS186::to_uint64(const std::vector<unsigned char>& v) {
     if (v.empty()) return 0;
     uint64_t res = 0;
@@ -93,18 +92,16 @@ vector<unsigned char> FIPS186::random_number(const vector<unsigned char>& max) {
 // p=bq+1
 //g=^q modp=1
 //q=160 бит
-// ---- Конструктор: тестовые параметры (НЕ ПРОДАКШН) ----
 FIPS186::FIPS186() {
-    // Небольшие тестовые простые p и q, и g = h^((p-1)/q) mod p
-    // Используются те же числа, что в ГОСТ-примере для совместимости тестов.
-    p = from_uint64(1279); // простое
-    q = from_uint64(71);   // простой делитель p-1
+    // Небольшие тестовые простые p и q, 
+    p = from_uint64(1279); // простые
+    q = from_uint64(71);   
     // вычислим g - берем h=2 и поднимаем в степень (p-1)/q
     uint64_t p_v = to_uint64(p), q_v = to_uint64(q);
     uint64_t h = 2;
     uint64_t exponent = (p_v - 1) / q_v;
     uint64_t g_v = mod_exp(h, exponent, p_v);
-    if (g_v <= 1) g_v = 34; // fallback (как в ГОСТ)
+    if (g_v <= 1) g_v = 34; 
     g = from_uint64(g_v);
     x = from_uint64(0);
     y = from_uint64(0);
@@ -122,7 +119,6 @@ void FIPS186::generate_keys() {
     y = from_uint64(y_v);
 }
 
-// Подпись (DSA-подобная):
 // r = (g^k mod p) mod q
 // s = k^{-1} (h + x*r) mod q
 //y=g^x modq
@@ -154,7 +150,6 @@ FIPS186::sign(const vector<unsigned char>& message_hash) {
     return make_pair(from_uint64(r), from_uint64(s));
 }
 
-// Проверка подписи:
 // 0 < r < q, 0 < s < q
 // w = s^{-1} mod q
 // u1 = (h * w) mod q
@@ -213,7 +208,6 @@ FIPS186::load_signature(const string& filename) {
     return sig;
 }
 
-// ---- Утилита: подпись файла и проверка (интерфейс как у ГОСТ) ----
 void fips_sign_and_verify_file(const std::string& filename) {
     FIPS186 fips;
     fips.generate_keys();
