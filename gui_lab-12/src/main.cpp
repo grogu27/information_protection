@@ -1,58 +1,61 @@
+#include <iostream>
 #include <SFML/Graphics.hpp>
 #include "game.hpp"
-#include <iostream>
+#include "deck.hpp"
 
 int main() {
-    int numPlayers;
-    std::cout << "Enter number of players (2-6): ";
-    std::cin >> numPlayers;
-    if(numPlayers < 2 || numPlayers > 6) return 1;
+    // Для проверки — используем p=23, как в лекции (пример 5.1)
+    cpp_int p = 1019;
+    int nPlayers = 2;
 
-    Game game(numPlayers);
-    game.start(); // раздача карт и формирование community
+    std::cout << "Mental Poker (p = " << p << ")\n";
+    Game game(p, nPlayers);
+    game.deal();
+    game.reveal();
+    game.verify();
 
-    sf::RenderWindow window(sf::VideoMode(1024, 768), "Mental Poker");
+    // --- GUI ---
+    sf::RenderWindow window(sf::VideoMode(1024, 768), "Mental Poker (p=23)");
     sf::Font font;
-    font.loadFromFile("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"); // стандартный шрифт
+    if (!font.loadFromFile("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf")) {
+        std::cerr << "Font not found! Install DejaVu or adjust path.\n";
+        return 1;
+    }
 
-    while(window.isOpen()) {
-        sf::Event event;
-        while(window.pollEvent(event)) {
-            if(event.type == sf::Event::Closed)
-                window.close();
+    while (window.isOpen()) {
+        sf::Event e;
+        while (window.pollEvent(e)) {
+            if (e.type == sf::Event::Closed) window.close();
         }
 
-        window.clear(sf::Color(0,128,0)); // зеленый стол
+        window.clear(sf::Color(0, 100, 0));
 
-        // рисуем карты игроков
-        for(int i=0; i<numPlayers; ++i) {
-            for(int j=0; j<2; ++j) {
-                sf::RectangleShape card(sf::Vector2f(60,90));
+        // Игроки
+        for (size_t i = 0; i < game.players.size(); ++i) {
+            for (size_t j = 0; j < game.players[i].hand_plain.size(); ++j) {
+                sf::RectangleShape card(sf::Vector2f(70, 100));
                 card.setFillColor(sf::Color::White);
                 card.setOutlineColor(sf::Color::Black);
-                card.setOutlineThickness(2);
-                card.setPosition(50 + j*70, 50 + i*120);
+                card.setPosition(100 + j * 80, 50 + i * 120);
                 window.draw(card);
 
-                sf::Text text(game.deck.cardToString(game.players[i].hand[j]), font, 12);
+                sf::Text text(Deck::cardToString(game.players[i].hand_plain[j]), font, 14);
                 text.setFillColor(sf::Color::Black);
-                text.setPosition(55 + j*70, 55 + i*120);
+                text.setPosition(110 + j * 80, 55 + i * 120);
                 window.draw(text);
             }
         }
 
-        // рисуем общие карты
-        for(int i=0; i<5; ++i) {
-            sf::RectangleShape card(sf::Vector2f(60,90));
-            card.setFillColor(sf::Color::Yellow);
-            card.setOutlineColor(sf::Color::Black);
-            card.setOutlineThickness(2);
-            card.setPosition(250 + i*70, 600);
+        // Общие карты
+        for (size_t i = 0; i < game.community_plain.size(); ++i) {
+            sf::RectangleShape card(sf::Vector2f(70, 100));
+            card.setFillColor(sf::Color(255, 255, 200));
+            card.setPosition(200 + i * 80, 600);
             window.draw(card);
 
-            sf::Text text(game.deck.cardToString(game.community[i]), font, 14);
+            sf::Text text(Deck::cardToString(game.community_plain[i]), font, 14);
+            text.setPosition(205 + i * 80, 605);
             text.setFillColor(sf::Color::Black);
-            text.setPosition(255 + i*70, 610);
             window.draw(text);
         }
 
