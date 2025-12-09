@@ -17,6 +17,5 @@ class Deck {
 public:
     static std::vector<cpp_int> getInitialDeck();   // 52 карты: 2..53
     static CardInfo getCardInfo(cpp_int card);
-    // Для совместимости — можно оставить, но лучше не использовать:
     static std::string cardToString(cpp_int card);
 };

@@ -138,11 +138,16 @@ public:
         long long recovered = Math::mod_exp(signature, keys_.e, keys_.n);
         cout << "Recovered (signature^e mod n): " << recovered << "\n";
 
-        bool valid = (recovered == message);
+        long long message_mod = message % keys_.n;
+        if (message_mod < 0) message_mod += keys_.n;
+
+        bool valid = (recovered == message_mod);
+        cout << "Message mod n: " << message_mod << "\n";
         cout << "Verification result: " << (valid ? "SUCCESS" : "FAILURE") << "\n";
         cout << "===========================================\n";
         return valid;
     }
+
 };
 
 class VoterClient {
@@ -188,6 +193,10 @@ public:
     long long blind_message(long long msg, const RSAKeys& pub) {
         cout << "\n===== CLIENT: BLINDING MESSAGE =====\n";
 
+        // Приводим сообщение к диапазону [0, n-1]
+        long long msg_mod = msg % pub.n;
+        if (msg_mod < 0) msg_mod += pub.n;
+
         uniform_int_distribution<long long> dist(2, pub.n - 2);
         long long r;
         long long x, y;
@@ -197,14 +206,17 @@ public:
 
         r_ = r;
         long long r_e = Math::mod_exp(r, pub.e, pub.n);
-        long long blinded = (msg * r_e) % pub.n;
+        long long blinded = (msg_mod * r_e) % pub.n;
 
+        cout << "Original message: " << msg << "\n";
+        cout << "Message mod n: " << msg_mod << "\n";
         cout << "Random r: " << r << "\n";
         cout << "r^e mod n: " << r_e << "\n";
         cout << "Blinded message: " << blinded << "\n";
         cout << "====================================\n";
         return blinded;
     }
+
 
     long long unblind_signature(long long blinded_sig, const RSAKeys& pub) {
         cout << "\n===== CLIENT: UNBLINDING SIGNATURE =====\n";

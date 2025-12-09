@@ -1,6 +1,5 @@
 #include "deck.hpp"
 
-// UTF-8 коды для мастей
 const std::string CLUBS    = "C";
 const std::string DIAMONDS = "D"; 
 const std::string HEARTS   = "H";
