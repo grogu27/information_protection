@@ -1,10 +1,8 @@
-// zkp.cpp
 #include "zkp.hpp"
 #include <iostream>
 #include <random>
 #include <algorithm>
 
-// Пункт задания: "демонстрация работы протокола"
 ZKP::ZKP(Graph& gg, const std::vector<int>& cyc) : g(gg), cycle(cyc) {}
 
 void ZKP::randomPerm(std::vector<int>& p){

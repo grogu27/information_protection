@@ -1,5 +1,3 @@
-// graph.hpp
-// Пункт задания: "считывать информацию о графах из файла"
 #pragma once
 #include <vector>
 #include <string>

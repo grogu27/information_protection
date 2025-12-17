@@ -1,5 +1,3 @@
-// gen.cpp
-// Пункт задания: "для тестирования необходимо генерировать правильные решения"
 #include <iostream>
 #include <fstream>
 #include <vector>
